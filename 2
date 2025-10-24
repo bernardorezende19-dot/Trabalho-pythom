@@ -1,0 +1,41 @@
+import tkinter
+from tkinter import filedialog, messagebox
+import PyPDF2
+import re
+
+
+def Get_text_from_PDFfiles_usingPyPDF2(in_PdfFile):  
+    texto = ""
+    with open(in_PdfFile, "rb") as file:
+        reader = PyPDF2.PdfReader(file)
+        for i, page in enumerate(reader.pages):
+            try:
+                content = page.extract_text()
+                if content:
+                    texto += content + "\n"
+                else:
+                    print(f"[AVISO] Página {i+1} sem texto extraído.")
+            except Exception as e:
+                print(f"[ERRO] Falha ao ler página {i+1}: {e}")
+    return texto.strip()
+
+
+def EscolherPDF():
+    arquivo = filedialog.askopenfilename(filetypes=[("Arquivos PDF", "*.pdf")])
+    if arquivo:
+        texto = Get_text_from_PDFfiles_usingPyPDF2(arquivo)
+        print("Texto extraído (primeiros 500 caracteres):", repr(texto[:500]))  # Debug
+        datas_encontradas = re.findall(r'\b\d{4}-\d{2}-\d{2}\b', texto)
+        print("Datas encontradas:", datas_encontradas)
+        messagebox.showinfo("Resultado", f"Datas encontradas:\n{datas_encontradas}" if datas_encontradas else "Nenhuma data encontrada.")
+
+
+def Exemplo():
+    root = tkinter.Tk()
+    root.title("Verificador de Feriados")
+    root.resizable(False, False)
+    tkinter.Button(root, text="Escolher PDF e Verificar Feriados", command=EscolherPDF).pack(pady=20)
+    root.mainloop()
+
+
+Exemplo()
