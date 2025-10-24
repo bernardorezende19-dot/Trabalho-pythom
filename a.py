@@ -1,0 +1,63 @@
+import tkinter
+from tkinter import filedialog, messagebox
+import PyPDF2
+import requests
+import re
+
+
+def Get_text_from_PDFfiles_usingPyPDF2(in_PdfFile):  
+    texto = ""
+    with open(in_PdfFile, "rb") as file:
+        reader = PyPDF2.PdfReader(file)
+        for i, page in enumerate(reader.pages):
+            try:
+                content = page.extract_text()
+                if content:
+                    texto += content + "\n"
+                else:
+                    print(f"[AVISO] Página {i+1} sem texto extraído.")
+            except Exception as e:
+                print(f"[ERRO] Falha ao ler página {i+1}: {e}")
+    return texto.strip()
+
+
+def VerificarFeriados(datas_pdf):
+    url = "https://date.nager.at/api/v3/PublicHolidays/2025/BR"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        datas_feriados_api = [f['date'] for f in response.json()]
+        return [data for data in datas_pdf if data in datas_feriados_api]
+    else:
+        print("Erro ao consultar API:", response.status_code)
+        return []
+
+
+def EscolherPDF():
+    arquivo = filedialog.askopenfilename(filetypes=[("Arquivos PDF", "*.pdf")])
+    if arquivo:
+        texto = Get_text_from_PDFfiles_usingPyPDF2(arquivo)
+        print("Texto extraído (primeiros 500 caracteres):", repr(texto[:500]))  # Debug
+        
+        # Agora capturamos YYYY-MM-DD
+        datas_encontradas = re.findall(r'\b\d{4}-\d{2}-\d{2}\b', texto)
+        print("Datas encontradas:", datas_encontradas)
+        
+        if not datas_encontradas:
+            messagebox.showinfo("Resultado", "Nenhuma data encontrada no PDF.")
+            return
+        
+        feriados_encontrados = VerificarFeriados(datas_encontradas)
+        resultado = "\n".join([f"{data} é um feriado." for data in feriados_encontrados]) if feriados_encontrados else "Nenhuma data extraída é feriado."
+        messagebox.showinfo("Feriados encontrados", resultado)
+
+
+def Exemplo():
+    root = tkinter.Tk()
+    root.title("Verificador de Feriados")
+    root.resizable(False, False)
+    tkinter.Button(root, text="Escolher PDF e Verificar Feriados", command=EscolherPDF).pack(pady=20)
+    root.mainloop()
+
+
+Exemplo()
