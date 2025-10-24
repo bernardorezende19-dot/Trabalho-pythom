@@ -1,0 +1,19 @@
+import tkinter
+from tkinter import filedialog, messagebox
+
+
+def EscolherPDF():
+    arquivo = filedialog.askopenfilename(filetypes=[("Arquivos PDF", "*.pdf")])
+    if arquivo:
+        messagebox.showinfo("Arquivo selecionado", f"Você escolheu: {arquivo}")
+
+
+def Exemplo():
+    root = tkinter.Tk()
+    root.title("Verificador de Feriados")
+    root.resizable(False, False)
+    tkinter.Button(root, text="Escolher PDF e Verificar Feriados", command=EscolherPDF).pack(pady=20)
+    root.mainloop()
+
+
+Exemplo()
